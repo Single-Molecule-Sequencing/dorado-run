@@ -113,4 +113,9 @@ finally:
 		os.remove(tar_path)
 		vprint(f"[dlDorado] Cleaned up archive.")
 
-print(f"[dlDorado] Dorado is ready at {os.path.abspath(args.dest)}")
+drd_exe = os.path.join(args.dest, f"dorado-{version}-{drd_os}-{drd_arch}", "bin", "dorado")
+
+if not os.path.isfile(drd_exe):
+	sys.exit(f"[dlDorado] Error: Expected executable not found at {drd_exe}")
+
+print(f"[dlDorado] Dorado is ready at {os.path.abspath(drd_exe)}")
