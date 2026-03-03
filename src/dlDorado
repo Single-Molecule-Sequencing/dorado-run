@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+# dlDorado.py
+# Download the latest Dorado release from GitHub and extract it
+
+import argparse
+import json
+import os
+import re
+import sys
+import subprocess
+
+
+DRD_DL_URL_PREFIX = "https://cdn.oxfordnanoportal.com/software/analysis/"
+DRD_GH_API = "https://api.github.com/repos/nanoporetech/dorado/releases/latest"
+
+
+def vprint(*a, **kw):
+	if args.verbose:
+		print(*a, **kw)
+
+
+############
+# argparse #
+############
+
+parser = argparse.ArgumentParser(description="Download the latest Dorado release from GitHub and extract it")
+parser.add_argument("-v", "--version", type=str, default="l",
+	help="Version of Dorado to download (e.g. 'l' for latest, '1.4.0') [%(default)s]")
+parser.add_argument("-d", "--dest", type=str, default=".",
+	help="Destination directory to extract Dorado into [%(default)s]")
+parser.add_argument("-o", "--os", type=str, default="linux",
+	help="Operating system for the Dorado release (linux, macos) [%(default)s]")
+parser.add_argument("-a", "--arch", type=str, default="x64",
+	help="Architecture for the Dorado release (x64, arm64) [%(default)s]")
+parser.add_argument("-V", "--verbose", action="store_true",
+	help="Enable verbose output")
+args = parser.parse_args()
+
+drd_os = args.os.lower()
+drd_arch = args.arch.lower()
+
+
+#########
+# check #
+#########
+
+if drd_os not in ["linux", "macos"]:
+	sys.exit(f"[dlDorado] Error: Invalid OS '{args.os}'. Choose from 'linux' or 'macos'.")
+if drd_arch not in ["x64", "arm64"]:
+	sys.exit(f"[dlDorado] Error: Invalid architecture '{args.arch}'. Choose from 'x64' or 'arm64'.")
+if drd_os == "macos" and drd_arch == "x64":
+	sys.exit(f"[dlDorado] Error: macOS x64 builds are not available. Use 'arm64' for macOS.")
+if args.version != "l" and not re.match(r"^\d+\.\d+\.\d+$", args.version):
+	sys.exit(f"[dlDorado] Error: Invalid version format '{args.version}'.\nUse 'l' for latest or specify a version like '1.4.0'.")
+
+os.makedirs(args.dest, exist_ok=True)
+
+
+########
+# main #
+########
+
+# Resolve version
+if args.version == "l":
+	vprint(f"[dlDorado] Fetching latest Dorado version from GitHub...")
+	try:
+		result = subprocess.run(
+			["curl", "-sf", "--fail", DRD_GH_API],
+			check=True, capture_output=True, text=True
+		)
+		version = json.loads(result.stdout)["tag_name"].lstrip("v")
+		vprint(f"[dlDorado] Latest version resolved: {version}")
+	except subprocess.CalledProcessError as e:
+		sys.exit(f"[dlDorado] Error: Failed to reach GitHub API (HTTP error or network failure): {e}")
+	except (KeyError, json.JSONDecodeError) as e:
+		sys.exit(f"[dlDorado] Error: Could not parse GitHub API response: {e}")
+else:
+	version = args.version
+
+tar_path = os.path.join(args.dest, f"dorado-{version}-{drd_os}-{drd_arch}.tar.gz")
+
+print(f"[dlDorado] Starting download of Dorado:\n  Version: {version}\n  OS: {drd_os}\n  Architecture: {drd_arch}\n  Destination: {os.path.abspath(args.dest)}")
+
+url = f"{DRD_DL_URL_PREFIX}dorado-{version}-{drd_os}-{drd_arch}.tar.gz"
+vprint(f"[dlDorado] Downloading from {url}...")
+
+try:
+	try:
+		subprocess.run(["curl", "-L", "--fail", url, "-o", tar_path], check=True)
+		vprint(f"[dlDorado] Download completed.")
+	except subprocess.CalledProcessError as e:
+		sys.exit(f"[dlDorado] Error: Download failed (HTTP error or network failure): {e}")
+
+	# Validate downloaded archive
+	if not os.path.exists(tar_path) or os.path.getsize(tar_path) == 0:
+		sys.exit(f"[dlDorado] Error: Downloaded file is missing or empty.")
+	try:
+		subprocess.run(["tar", "-tzf", tar_path], check=True, capture_output=True)
+		vprint(f"[dlDorado] Archive integrity verified.")
+	except subprocess.CalledProcessError:
+		sys.exit(f"[dlDorado] Error: Downloaded archive is corrupt or invalid.")
+
+	# Extract
+	vprint(f"[dlDorado] Extracting Dorado...")
+	try:
+		subprocess.run(["tar", "-xzf", tar_path, "-C", args.dest], check=True)
+		vprint(f"[dlDorado] Extraction completed.")
+	except subprocess.CalledProcessError as e:
+		sys.exit(f"[dlDorado] Error extracting Dorado: {e}")
+
+finally:
+	if os.path.exists(tar_path):
+		os.remove(tar_path)
+		vprint(f"[dlDorado] Cleaned up archive.")
+
+print(f"[dlDorado] Dorado is ready at {os.path.abspath(args.dest)}")
