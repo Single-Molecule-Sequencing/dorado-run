@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+# lnPod5.py
+# Stage Pod5 directories using symlinks for Dorado basecalling
+
+import argparse
+import sys
+from pathlib import Path
+
+
+############
+# argparse #
+############
+
+parser = argparse.ArgumentParser(
+	description="Stage Pod5 directories using symlinks for Dorado basecalling")
+parser.add_argument("-s", "--source", type=Path,
+	help="Root path containing the raw experiment folders")
+parser.add_argument("-d", "--dest", type=Path,
+	help="Destination path where symlinks will be created")
+parser.add_argument("-p", "--pod5-name", type=str, default="pod5_pass",
+	help="Name of the pod5 directory to search for recursively [%(default)s]")
+parser.add_argument("-c", "--clean", action="store_true",
+	help="Remove all symlinks in the destination directory and exit")
+args = parser.parse_args()
+
+if not args.dest:
+	sys.exit("[lnPod5] Error: --dest is required")
+
+
+#########
+# clean #
+#########
+
+if args.clean:
+	destdir = args.dest.resolve()
+	if not destdir.exists():
+		sys.exit(f"[lnPod5] Error: Destination directory does not exist: {destdir}")
+
+	print(f"[lnPod5] Removing symlinks in {destdir}")
+	link_count = 0
+	for item in sorted(destdir.iterdir()):
+		if item.is_symlink():
+			try:
+				item.unlink()
+				link_count += 1
+			except Exception as e:
+				print(f"[lnPod5] Error removing {item.name}: {e}", file=sys.stderr)
+		elif item.is_dir():
+			print(f"[lnPod5] Skipped physical directory: {item.name}")
+
+	print(f"[lnPod5] Removed {link_count} symlinks.")
+	sys.exit(0)
+
+
+########
+# main #
+########
+
+if not args.source:
+	sys.exit("[lnPod5] Error: --source is required unless using --clean")
+
+srcdir  = args.source.resolve()
+destdir = args.dest.resolve()
+
+if not srcdir.exists():
+	sys.exit(f"[lnPod5] Error: Source directory does not exist: {srcdir}")
+destdir.mkdir(parents=True, exist_ok=True)
+print(f"[lnPod5] Scanning {srcdir} -> Linking to {destdir}")
+
+# Recursively find all pod5 directories
+link_count = 0
+for pod5_dir in sorted(srcdir.rglob(args.pod5_name)):
+	if not pod5_dir.is_dir():
+		continue
+
+	# Derive experiment name from the top-level directory under srcdir
+	experiment_name = pod5_dir.relative_to(srcdir).parts[0]
+
+	# Determine if pre-demux (no barcode subdirs) or post-demux (barcode subdirs present)
+	subdirs = sorted([p for p in pod5_dir.iterdir() if p.is_dir()])
+
+	if subdirs:
+		# Post-demux: link each barcode directory individually
+		for barcode_dir in subdirs:
+			link_name = f"{experiment_name}_{barcode_dir.name}"
+			dest_link = destdir / link_name
+
+			if dest_link.exists() or dest_link.is_symlink():
+				sys.exit(f"[lnPod5] Error: Link already exists: {link_name}")
+
+			dest_link.symlink_to(barcode_dir.resolve())
+			print(f"  Linked: {link_name}")
+			link_count += 1
+	else:
+		# Pre-demux: link the pod5 directory itself (no barcode subdirs)
+		dest_link = destdir / experiment_name
+
+		if dest_link.exists() or dest_link.is_symlink():
+			sys.exit(f"[lnPod5] Error: Link already exists: {experiment_name}")
+
+		dest_link.symlink_to(pod5_dir.resolve())
+		print(f"  Linked: {experiment_name} (pre-demux)")
+		link_count += 1
+
+print(f"[lnPod5] Linked {link_count} pod5 directories to {destdir}")
