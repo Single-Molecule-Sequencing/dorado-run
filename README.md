@@ -53,7 +53,7 @@ Edit `cfg/config_temp.yml`, then run the full pipeline with a single command:
 dorado-run run -s /path/to/raw/experiments/with/pod5/dirs
 ```
 
-This chains all steps in order: `ln-pod5` → `cfg-init` → `dl-dorado` → `dl-models` → `gen-cmd`.
+This chains all steps in order: `ln-pod5` → `cfg-init` → `dl-dorado` → `dl-models` → `gen-cmd` → `to-sbatch`.
 
 | Flag              | Default                 | Description                                              |
 | ----------------- | ----------------------- | -------------------------------------------------------- |
@@ -98,7 +98,7 @@ dorado-run ln-pod5 -s /data/runs/2026-03-01 -d ./Input
 
 #### `cfg-init`
 
-Reads `config_temp.yml`, resolves `{placeholder}` references between keys, converts all path keys to absolute paths, scans `--input-dir` for pod5 symlinks/subdirs, and writes the fully resolved `config.yml`.
+Reads `config_temp.yml`, resolves `{placeholder}` references between keys, converts all path keys to absolute paths, scans `--input-dir` for pod5 symlinks/subdirs, and writes the fully resolved `config.yml`. The **symlink name** is recorded as each sample's identifier and is used downstream when naming output BAM files.
 
 > **CWD note:** All `dorado-run` subcommands must be run from the project root. Path resolution in `cfg-init` (and all subsequent steps) is relative to the working directory when the command is invoked.
 
@@ -151,7 +151,7 @@ dorado-run dl-models
 
 #### `gen-cmd`
 
-Reads `config.yml` and generates a `dorado basecaller` shell command for each pod5 directory. When `trim: both`, two commands are written per sample — one with adapter trimming and one without. Output BAM files are named `{sample}_{tier}_v{simplex_ver}_{trim1|trim0}_{mods_flag}.bam` (e.g. `15382-CZ-1_sup_v5.0.0_trim1_0.bam`). When `kit_name` is set, `--kit-name` is passed to Dorado to enable on-the-fly demultiplexing.
+Reads `config.yml` and generates a `dorado basecaller` shell command for each pod5 directory. When `trim: both`, two commands are written per sample — one with adapter trimming and one without. Output BAM files are named `{sample}_{tier}_v{simplex_ver}_{trim1|trim0}_{mods_flag}.bam` (e.g. `15382-CZ-1_sup_v5.0.0_trim1_0.bam`) and their paths in `cmd.txt` are written as **absolute paths**. When `kit_name` is set, `--kit-name` is passed to Dorado to enable on-the-fly demultiplexing.
 
 | Flag           | Default        | Description                              |
 | -------------- | -------------- | ---------------------------------------- |
@@ -276,7 +276,7 @@ Input:
         │
         ▼
 ┌─────────────────────────┐
-│  6. to-sbatch           │  (optional) Generates Slurm .sbatch scripts
+│  6. to-sbatch           │  Generates Slurm .sbatch scripts → Sbatch/
 └─────────────────────────┘
         │
         ▼

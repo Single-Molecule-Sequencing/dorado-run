@@ -84,7 +84,7 @@ def _build_commands(cfg: dict) -> list:
 		for trimmed, trim_suffix in trim_states:
 			# {sample}_{tier}_v{ver}{_trim1|_trim0}_{mods_flag}.bam
 			bam_name   = f"{sample}_{simplex_tier}_v{simplex_ver}{trim_suffix}_{mods_flag}.bam"
-			output_bam = str(Path(output_dir) / bam_name)
+			output_bam = str((Path(output_dir) / bam_name).resolve())
 
 			parts = [
 				str(Path(dorado_exe).resolve()),

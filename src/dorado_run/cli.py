@@ -21,12 +21,12 @@ def _read_config_key(config_path: str, key: str):
 
 
 def _run_pipeline(args):
-	"""Chain all pipeline steps: ln-pod5 → cfg-init → dl-dorado → dl-models → gen-cmd."""
+	"""Chain all pipeline steps: ln-pod5 → cfg-init → dl-dorado → dl-models → gen-cmd → to-sbatch."""
 	dest   = Path(args.dest)
 	config = args.config
 
 	# Step 1: ln-pod5
-	print("\n[run] Step 1/5 — ln-pod5")
+	print("\n[run] Step 1/6 — ln-pod5")
 	lnPod5.run(argparse.Namespace(
 		source=Path(args.source),
 		dest=dest,
@@ -35,7 +35,7 @@ def _run_pipeline(args):
 	))
 
 	# Step 2: cfg-init
-	print("\n[run] Step 2/5 — cfg-init")
+	print("\n[run] Step 2/6 — cfg-init")
 	cfgInit.run(argparse.Namespace(
 		template=args.template,
 		input_dir=str(dest),
@@ -43,7 +43,7 @@ def _run_pipeline(args):
 	))
 
 	# Step 3: dl-dorado — derive extraction dest from drd_exe written by cfg-init
-	print("\n[run] Step 3/5 — dl-dorado")
+	print("\n[run] Step 3/6 — dl-dorado")
 	drd_exe = _read_config_key(config, "drd_exe")
 	dl_dest = str(Path(drd_exe).parent.parent.parent) if drd_exe else "."
 	dlDorado.run(argparse.Namespace(
@@ -57,17 +57,26 @@ def _run_pipeline(args):
 	))
 
 	# Step 4: dl-models
-	print("\n[run] Step 4/5 — dl-models")
+	print("\n[run] Step 4/6 — dl-models")
 	dlModels.run(argparse.Namespace(
 		config=config,
 		dry_run=args.dry_run,
 	))
 
 	# Step 5: gen-cmd
-	print("\n[run] Step 5/5 — gen-cmd")
+	print("\n[run] Step 5/6 — gen-cmd")
 	genCMD.run(argparse.Namespace(
 		config=config,
 		output="./cmd.txt",
+		dry_run=args.dry_run,
+	))
+
+	# Step 6: to-sbatch
+	print("\n[run] Step 6/6 — to-sbatch")
+	toSbatch.run(argparse.Namespace(
+		config=config,
+		input=None,
+		outdir=None,
 		dry_run=args.dry_run,
 	))
 
@@ -165,7 +174,7 @@ def main():
 	# --- run (full pipeline) ---
 	parser_run = subparsers.add_parser(
 		"run",
-		help="Full pipeline: ln-pod5 → cfg-init → dl-dorado → dl-models → gen-cmd",
+		help="Full pipeline: ln-pod5 → cfg-init → dl-dorado → dl-models → gen-cmd → to-sbatch",
 	)
 	parser_run.add_argument("-s", "--source", required=True, type=Path,
 		help="Raw experiment root dir; passed to ln-pod5")

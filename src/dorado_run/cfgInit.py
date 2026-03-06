@@ -85,8 +85,11 @@ def run(args):
 	if not input_dir.exists():
 		sys.exit(f"[cfg-init] Error: Input directory does not exist: {input_dir}")
 
+	# Store the symlink path (not resolved) so the symlink name is preserved
+	# as the sample identifier in downstream steps (e.g. gen-cmd BAM naming).
+	# genCMD resolves the path when building dorado commands.
 	pod5_dirs = sorted([
-		str(p.resolve())
+		str(p)
 		for p in sorted(input_dir.iterdir())
 		if p.is_dir()
 	])

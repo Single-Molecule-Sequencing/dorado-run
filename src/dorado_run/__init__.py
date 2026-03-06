@@ -8,7 +8,7 @@ Provides CLI entry point `dorado-run` with subcommands:
   dl-models — Download Dorado simplex and modification models
   gen-cmd   — Generate dorado basecaller command lines from config.yml
   to-sbatch — Generate per-job Slurm sbatch scripts from cmd.txt
-  run       — Full pipeline: ln-pod5 → cfg-init → dl-dorado → dl-models → gen-cmd
+  run       — Full pipeline: ln-pod5 → cfg-init → dl-dorado → dl-models → gen-cmd → to-sbatch
 """
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
