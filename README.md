@@ -118,14 +118,14 @@ dorado-run cfg-init -t cfg/config_temp.yml -i ./Input -o config.yml
 
 Downloads the specified Dorado release tarball from the ONT CDN and extracts it. Version, OS, and architecture are read from `config.yml` by default; CLI flags override.
 
-| Flag              | Default               | Description                                         |
-| ----------------- | --------------------- | --------------------------------------------------- |
-| `-c, --config`    | `./config.yml`        | Config file to read `drd_ver`/`drd_os`/`drd_arch`   |
-| `-v, --version`   | *(config or `l`)*     | Dorado version: `l` for latest, or `X.Y.Z`          |
-| `-O, --target-os` | *(config or `linux`)* | Target OS: `linux` or `macos`                       |
-| `-a, --arch`      | *(config or `x64`)*   | Architecture: `x64` or `arm64`                      |
-| `-d, --dest`      | `.`                   | Directory to extract Dorado into                    |
-| `-V, --verbose`   | `False`               | Enable verbose output                               |
+| Flag              | Default               | Description                                       |
+| ----------------- | --------------------- | ------------------------------------------------- |
+| `-c, --config`    | `./config.yml`        | Config file to read `drd_ver`/`drd_os`/`drd_arch` |
+| `-v, --version`   | *(config or `l`)*     | Dorado version: `l` for latest, or `X.Y.Z`        |
+| `-O, --target-os` | *(config or `linux`)* | Target OS: `linux` or `macos`                     |
+| `-a, --arch`      | *(config or `x64`)*   | Architecture: `x64` or `arm64`                    |
+| `-d, --dest`      | `.`                   | Directory to extract Dorado into                  |
+| `-V, --verbose`   | `False`               | Enable verbose output                             |
 
 ```bash
 dorado-run dl-dorado -v 0.9.1 -O linux -a x64 -d .
@@ -227,17 +227,17 @@ Copy and edit before running. `cfg-init` reads this file and writes the resolved
 
 ### HPC / Slurm settings
 
-| Key              | Default      | Description                                                         |
-| ---------------- | ------------ | ------------------------------------------------------------------- |
-| `hpc_account`    | `null`       | **Required** — Slurm account / allocation name                      |
+| Key              | Default      | Description                                                          |
+| ---------------- | ------------ | -------------------------------------------------------------------- |
+| `hpc_account`    | `null`       | **Required** — Slurm account / allocation name                       |
 | `hpc_targets`    | see config   | List of `{partition, gres}` pairs; each job is randomly assigned one |
-| `hpc_cpus`       | `8`          | CPUs per task                                                       |
-| `hpc_mem`        | `"32G"`      | Memory per task                                                     |
-| `hpc_time`       | `"12:00:00"` | Walltime (HH:MM:SS)                                                 |
-| `hpc_email`      | `null`       | Email for BEGIN/END/FAIL notifications (`null` to disable)          |
-| `hpc_job_prefix` | `"dorado"`   | Prefix prepended to Slurm job names                                 |
-| `hpc_module`     | `null`       | `module load <value>` line inserted in each script                  |
-| `hpc_outdir`     | `"./Sbatch"` | Directory where `.sbatch` scripts are written                       |
+| `hpc_cpus`       | `8`          | CPUs per task                                                        |
+| `hpc_mem`        | `"32G"`      | Memory per task                                                      |
+| `hpc_time`       | `"12:00:00"` | Walltime (HH:MM:SS)                                                  |
+| `hpc_email`      | `null`       | Email for BEGIN/END/FAIL notifications (`null` to disable)           |
+| `hpc_job_prefix` | `"dorado"`   | Prefix prepended to Slurm job names                                  |
+| `hpc_module`     | `null`       | `module load <value>` line inserted in each script                   |
+| `hpc_outdir`     | `"./Sbatch"` | Directory where `.sbatch` scripts are written                        |
 
 ---
 
