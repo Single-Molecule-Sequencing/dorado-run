@@ -151,7 +151,7 @@ dorado-run dl-models
 
 #### `gen-cmd`
 
-Reads `config.yml` and generates a `dorado basecaller` shell command for each pod5 directory. When `trim: both`, two commands are written per sample — one with adapter trimming (`_trim1` suffix) and one without (`_trim0` suffix). When `trim: yes`, the output is suffixed `_trim1`. When `trim: no`, the output is suffixed `_trim0`.
+Reads `config.yml` and generates a `dorado basecaller` shell command for each pod5 directory. When `trim: both`, two commands are written per sample — one with adapter trimming and one without. Output BAM files are named `{sample}_{tier}_v{simplex_ver}_{trim1|trim0}_{mods_flag}.bam` (e.g. `15382-CZ-1_sup_v5.0.0_trim1_0.bam`). When `kit_name` is set, `--kit-name` is passed to Dorado to enable on-the-fly demultiplexing.
 
 | Flag           | Default        | Description                              |
 | -------------- | -------------- | ---------------------------------------- |
@@ -192,23 +192,24 @@ Copy and edit before running. `cfg-init` reads this file and writes the resolved
 
 ### Basecalling settings
 
-| Key                  | Default                                               | Description                                  |
-| -------------------- | ----------------------------------------------------- | -------------------------------------------- |
-| `drd_ver`            | `"1.4.0"`                                             | Dorado release version                       |
-| `drd_os`             | `"linux"`                                             | Target OS for the binary (`linux` / `macos`) |
-| `drd_arch`           | `"x64"`                                               | CPU architecture (`x64` / `arm64`)           |
-| `drd_exe`            | `"./dorado-{drd_ver}-{drd_os}-{drd_arch}/bin/dorado"` | Resolved path to Dorado binary               |
-| `simplex_model_ver`  | `"5.0.0"`                                             | Simplex model version                        |
-| `simplex_model_tier` | `"sup"`                                               | Model tier: `sup`, `hac`, or `fast`          |
-| `dna_model_prefix`   | `"dna_r10.4.1_e8.2_400bps_"`                          | Model name prefix                            |
-| `mods_flag`          | `0`                                                   | Modifications bit-flag (see table below)     |
-| `mods_ver`           | `null`                                                | Per-mod-type version pin (`null` = latest)   |
-| `trim`               | `"yes"`                                               | Trim adapter: `yes`, `no`, or `both`         |
-| `gpu`                | `"auto"`                                              | GPU selector passed to `-x`                  |
-| `models_dir`         | `"./Models"`                                          | Root directory for downloaded models         |
-| `simplex_model_dir`  | `"{models_dir}/Simplex"`                              | Destination for simplex model                |
-| `mods_model_dir`     | `"{models_dir}/Mods"`                                 | Destination for modification models          |
-| `output_directory`   | `"./Output"`                                          | Directory for output BAM files               |
+| Key                  | Default                                               | Description                                                                |
+| -------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------- |
+| `drd_ver`            | `"1.4.0"`                                             | Dorado release version                                                     |
+| `drd_os`             | `"linux"`                                             | Target OS for the binary (`linux` / `macos`)                               |
+| `drd_arch`           | `"x64"`                                               | CPU architecture (`x64` / `arm64`)                                         |
+| `drd_exe`            | `"./dorado-{drd_ver}-{drd_os}-{drd_arch}/bin/dorado"` | Resolved path to Dorado binary                                             |
+| `simplex_model_ver`  | `"5.0.0"`                                             | Simplex model version                                                      |
+| `simplex_model_tier` | `"sup"`                                               | Model tier: `sup`, `hac`, or `fast`                                        |
+| `dna_model_prefix`   | `"dna_r10.4.1_e8.2_400bps_"`                          | Model name prefix                                                          |
+| `mods_flag`          | `0`                                                   | Modifications bit-flag (see table below)                                   |
+| `mods_ver`           | `null`                                                | Per-mod-type version pin (`null` = latest)                                 |
+| `kit_name`           | `null`                                                | Barcode kit for demux (e.g. `SQK-NBD114-96`); `null` disables `--kit-name` |
+| `trim`               | `"yes"`                                               | Trim adapter: `yes`, `no`, or `both`                                       |
+| `gpu`                | `"auto"`                                              | GPU selector passed to `-x`                                                |
+| `models_dir`         | `"./Models"`                                          | Root directory for downloaded models                                       |
+| `simplex_model_dir`  | `"{models_dir}/Simplex"`                              | Destination for simplex model                                              |
+| `mods_model_dir`     | `"{models_dir}/Mods"`                                 | Destination for modification models                                        |
+| `output_directory`   | `"./Output"`                                          | Directory for output BAM files                                             |
 
 ### `mods_flag` values
 
@@ -279,5 +280,5 @@ Input:
 └─────────────────────────┘
         │
         ▼
-  Output/<sample>.bam
+  Output/<sample>_<tier>_v<ver>_<trim>_<mods_flag>.bam
 ```
