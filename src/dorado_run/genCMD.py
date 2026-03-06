@@ -59,6 +59,7 @@ def _build_commands(cfg: dict) -> list:
 	gpu          = str(cfg.get("gpu", "auto"))
 	mods_flag    = int(cfg.get("mods_flag", 0))
 	mods_dir     = cfg.get("mods_model_dir", "")
+	kit_name     = cfg.get("kit_name") or None
 
 	# Enumerate modification model directories within mods_dir.
 	mods_model_dirs = []
@@ -81,7 +82,8 @@ def _build_commands(cfg: dict) -> list:
 	for pod_dir in pod5_dirs:
 		sample = Path(pod_dir).name or Path(pod_dir).stem
 		for trimmed, trim_suffix in trim_states:
-			bam_name   = f"{sample}{trim_suffix}.bam"
+			# {sample}_{tier}_v{ver}{_trim1|_trim0}_{mods_flag}.bam
+			bam_name   = f"{sample}_{simplex_tier}_v{simplex_ver}{trim_suffix}_{mods_flag}.bam"
 			output_bam = str(Path(output_dir) / bam_name)
 
 			parts = [
@@ -94,6 +96,9 @@ def _build_commands(cfg: dict) -> list:
 
 			if not trimmed:
 				parts.append("--no-trim")
+
+			if kit_name:
+				parts += ["--kit-name", kit_name]
 
 			for mmod in mods_model_dirs:
 				parts += ["--modified-bases-models", mmod]

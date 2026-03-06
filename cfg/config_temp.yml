@@ -43,6 +43,12 @@ mods_flag: 0
 #   mods_ver: {"5mCG_5hmCG": "v3", "6mA": "v2"}
 mods_ver: null
 
+# Barcode kit name used for this experiment (optional).
+# When set, passed to dorado basecaller as --kit-name to enable demultiplexing.
+# Leave null to skip demultiplexing.
+# Example: "SQK-NBD114-96"
+kit_name: null
+
 # Trimming choices:
 #  - both : both trimmed and --no-trim (trim1 and trim0)
 #  - yes  : trimming enabled (trim1)
