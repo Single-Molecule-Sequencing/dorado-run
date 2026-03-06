@@ -1,5 +1,7 @@
 # dorado-run
 
+[![DOI](https://zenodo.org/badge/1110025967.svg)](https://doi.org/10.5281/zenodo.18883656)
+
 A Python CLI tool for orchestrating [Oxford Nanopore Dorado](https://github.com/nanoporetech/dorado) basecalling on HPC and local systems. It handles pod5 staging, config resolution, binary and model downloads, command generation, and Slurm job submission — each as an independently runnable subcommand or chained together with a single `run` call.
 
 > **System requirement:** `curl` must be on `$PATH` (used by `dl-dorado` to fetch releases from GitHub).
