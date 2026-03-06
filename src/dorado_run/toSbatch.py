@@ -1,6 +1,7 @@
 # toSbatch.py
 # Generate per-job Slurm sbatch scripts from a dorado cmd.txt
 
+import random
 import shlex
 import sys
 import yaml
@@ -81,9 +82,23 @@ def run(args):
 	cmd_txt    = Path(args.input  or cfg.get("hpc_cmd_txt",  _DEFAULT_CMD_TXT))
 	outdir     = Path(args.outdir or cfg.get("hpc_outdir",   _DEFAULT_OUTDIR))
 
-	partition  = cfg.get("hpc_partition",  "gpu")
+	# Build list of (partition, gres) targets; each job is randomly assigned one.
+	raw_targets = cfg.get("hpc_targets")
+	if raw_targets and isinstance(raw_targets, list):
+		targets = [
+			(t["partition"], t["gres"])
+			for t in raw_targets
+			if isinstance(t, dict) and "partition" in t and "gres" in t
+		]
+		if not targets:
+			sys.exit("[to-sbatch] Error: 'hpc_targets' contains no valid {partition, gres} entries.")
+	else:
+		# Fallback: legacy single-key values
+		targets = [(
+			cfg.get("hpc_partition", "gpu"),
+			cfg.get("hpc_gres",      "gpu:1"),
+		)]
 	account    = cfg.get("hpc_account")    or None
-	gres       = cfg.get("hpc_gres",       "gpu:1")
 	cpus       = int(cfg.get("hpc_cpus",   8))
 	mem        = cfg.get("hpc_mem",        "32G")
 	walltime   = cfg.get("hpc_time",       "12:00:00")
@@ -115,6 +130,7 @@ def run(args):
 
 	written = 0
 	for idx, cmd in enumerate(cmds, start=1):
+		partition, gres = random.choice(targets)
 		job_name = _derive_job_name(cmd, job_prefix, idx)
 		header   = _build_header(
 			partition = partition,

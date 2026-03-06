@@ -230,8 +230,7 @@ Copy and edit before running. `cfg-init` reads this file and writes the resolved
 | Key              | Default      | Description                                                         |
 | ---------------- | ------------ | ------------------------------------------------------------------- |
 | `hpc_account`    | `null`       | **Required** — Slurm account / allocation name                      |
-| `hpc_partition`  | `"gpu"`      | Slurm partition                                                     |
-| `hpc_gres`       | `"gpu:1"`    | Full Slurm GRES string (e.g. `gpu:nvidia_a100_80gb_pcie_3g.40gb:1`) |
+| `hpc_targets`    | see config   | List of `{partition, gres}` pairs; each job is randomly assigned one |
 | `hpc_cpus`       | `8`          | CPUs per task                                                       |
 | `hpc_mem`        | `"32G"`      | Memory per task                                                     |
 | `hpc_time`       | `"12:00:00"` | Walltime (HH:MM:SS)                                                 |

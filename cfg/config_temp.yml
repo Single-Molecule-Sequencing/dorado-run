@@ -74,13 +74,18 @@ pod5_dirs:
 # [REQUIRED] Slurm account / allocation name — must be set to use to-sbatch
 hpc_account: null
 
-# Slurm partition to submit jobs to
-hpc_partition: "gpu"
-
-# GRES string for GPU resources  (full Slurm GRES format)
-# Examples:
-#   simple GPU count: "gpu:1"
-hpc_gres: "gpu:1"
+# List of valid partition + GRES pairs.  Each sbatch job is randomly assigned
+# one entry, spreading load evenly across all available targets.
+# Add more entries to balance across multiple partitions or GPU types.
+# Example with two targets:
+#   hpc_targets:
+#     - partition: "gpu"
+#       gres: "gpu:1"
+#     - partition: "gpu_high"
+#       gres: "gpu:nvidia_a100_80gb_pcie_3g.40gb:1"
+hpc_targets:
+  - partition: "gpu"
+    gres: "gpu:1"
 
 # CPUs per task
 hpc_cpus: 8
