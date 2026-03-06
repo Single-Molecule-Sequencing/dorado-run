@@ -1,8 +1,26 @@
 .DS_Store
 *.tar.gz
 
+# Development scratch directory
 dev/
+# Project documentation (design notes, todos)
+docs/
+# Extracted Dorado releases
 dorado-*/
 
+# Runtime-generated directories
 Input/
 Models/
+Output/
+Sbatch/
+
+# Auto-generated config (source of truth is cfg/config_temp.yml)
+config.yml
+
+# Python bytecode and build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+.eggs/

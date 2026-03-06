@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dorado-run"
+version = "0.2.0"
+description = "ONT Dorado Basecaller Runner"
+license = {file = "LICENSE"}
+authors = [{ name = "Haoran Li", email = "hrli@umich.edu" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+]
+
+requires-python = ">=3.8"
+dependencies = [
+    "pyyaml",
+]
+
+[project.scripts]
+dorado-run = "dorado_run.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

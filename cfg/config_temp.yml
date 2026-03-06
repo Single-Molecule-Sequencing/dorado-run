@@ -1,0 +1,105 @@
+# Dorado release version
+drd_ver: "1.4.0"
+
+# Target OS for the Dorado binary
+drd_os: "linux"
+
+# CPU architecture for the Dorado binary
+drd_arch: "x64"
+
+# Dorado executable path template
+drd_exe: "./dorado-{drd_ver}-{drd_os}-{drd_arch}/bin/dorado"
+
+# Simplex model version
+simplex_model_ver: "5.0.0"
+
+# Simplex model tier
+simplex_model_tier: "sup"
+
+# Model name prefix (pore type, chemistry, speed)
+dna_model_prefix: "dna_r10.4.1_e8.2_400bps_"
+
+# Modifications flag (integer) — selects which mods models to download and call.
+# Set to 0 to disable modifications calling entirely (simplex only).
+#
+# Flag table:
+#   0  → none            (simplex only)
+#   1  → 5mCG_5hmCG
+#   2  → 5mC_5hmC
+#   3  → 4mC_5mC
+#   4  → 5mC
+#   8  → 6mA
+#   9  → 6mA + 5mCG_5hmCG
+#   10 → 6mA + 5mC_5hmC
+#   11 → 6mA + 4mC_5mC
+#   12 → 6mA + 5mC
+#
+# Bit layout: bit 3 (value 8) = 6mA; bits 0-2 = cytosine mod (0=none, 1-4 as above)
+mods_flag: 0
+
+# Mods model version overrides (optional).
+# null → use the latest available version for each required mod type.
+# Specify per mod type to pin exact versions, e.g.:
+#   mods_ver: {"5mCG_5hmCG": "v3", "6mA": "v2"}
+mods_ver: null
+
+# Trimming choices:
+#  - both : both trimmed and --no-trim (trim1 and trim0)
+#  - yes  : trimming enabled (trim1)
+#  - no   : trimming disabled, --no-trim (trim0)
+trim: "yes"
+
+# GPU device selector passed to Dorado via -x
+gpu: "auto"
+
+# Root directory for downloaded models
+models_dir: "./Models"
+
+# Directory for the downloaded simplex model
+simplex_model_dir: "{models_dir}/Simplex"
+
+# Directory for downloaded modification models
+mods_model_dir: "{models_dir}/Mods"
+
+# Output directory for basecalled BAM files
+output_directory: "./Output"
+
+# Resolved list of pod5 input directories (populated by cfg-init)
+pod5_dirs:
+
+# ---------------------------------------------------------------------------
+# HPC / Slurm settings  (used by the to-sbatch subcommand)
+# ---------------------------------------------------------------------------
+
+# [REQUIRED] Slurm account / allocation name — must be set to use to-sbatch
+hpc_account: null
+
+# Slurm partition to submit jobs to
+hpc_partition: "gpu"
+
+# GRES string for GPU resources  (full Slurm GRES format)
+# Examples:
+#   simple GPU count: "gpu:1"
+hpc_gres: "gpu:1"
+
+# CPUs per task
+hpc_cpus: 8
+
+# Memory per task (Slurm memory string)
+hpc_mem: "32G"
+
+# Walltime limit  (HH:MM:SS)
+hpc_time: "12:00:00"
+
+# Email address for Slurm BEGIN/END/FAIL notifications  (null to disable)
+hpc_email: null
+
+# Prefix prepended to Slurm job names  (job name = {prefix}_{sample})
+hpc_job_prefix: "dorado"
+
+# Environment module to load inside each sbatch script  (null to skip)
+# Example: "cuda/12.1"
+hpc_module: null
+
+# Directory where .sbatch scripts are written
+hpc_outdir: "./Sbatch"
