@@ -11,4 +11,4 @@ Provides CLI entry point `dorado-run` with subcommands:
   run       — Full pipeline: ln-pod5 → cfg-init → dl-dorado → dl-models → gen-cmd → to-sbatch
 """
 
-__version__ = "0.2.3"
+__version__ = "0.3.0"

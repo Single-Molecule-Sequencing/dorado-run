@@ -70,6 +70,18 @@ mods_model_dir: "{models_dir}/Mods"
 # Output directory for basecalled BAM files
 output_directory: "./Output"
 
+# Source directory containing raw experiment folders (used by ln-pod5).
+# When set, the 'run' pipeline reads this instead of requiring --source on the CLI.
+source_dir: null
+
+# Override: link a single pod5 directory with a custom experiment name.
+# When BOTH override_pod5_dir and override_experiment_name are set,
+# ln-pod5 skips the normal source_dir scan and creates a single symlink:
+#   {dest}/{override_experiment_name}_{basename of override_pod5_dir}
+# Useful for testing a specific pod5 directory without the standard hierarchy.
+override_pod5_dir: null
+override_experiment_name: null
+
 # Resolved list of pod5 input directories (populated by cfg-init)
 pod5_dirs:
 

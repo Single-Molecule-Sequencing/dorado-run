@@ -37,9 +37,28 @@ def run(args):
 		print(f"[ln-pod5] Removed {removed} symlinks.")
 		return
 
+	# --- override mode: single pod5 dir with custom experiment name ---
+	override_pod5 = getattr(args, 'override_pod5_dir', None)
+	override_name = getattr(args, 'override_experiment_name', None)
+	if override_pod5 and override_name:
+		destdir = dest.resolve()
+		destdir.mkdir(parents=True, exist_ok=True)
+		removed = _clean_symlinks(destdir)
+		if removed:
+			print(f"[ln-pod5] Cleared {removed} existing symlink(s) from {destdir}")
+		override_path = Path(override_pod5).resolve()
+		if not override_path.exists():
+			sys.exit(f"[ln-pod5] Error: Override pod5 directory does not exist: {override_path}")
+		link_name = f"{override_name}_{override_path.name}"
+		dest_link = destdir / link_name
+		dest_link.symlink_to(override_path)
+		print(f"[ln-pod5] Override: Linked {link_name} -> {override_path}")
+		print(f"[ln-pod5] Linked 1 pod5 directory to {destdir}")
+		return
+
 	# --- link mode ---
 	if not args.source:
-		sys.exit("[ln-pod5] Error: --source is required unless using --clean")
+		sys.exit("[ln-pod5] Error: --source is required unless using --clean or override")
 
 	srcdir  = Path(args.source).resolve()
 	destdir = dest.resolve()

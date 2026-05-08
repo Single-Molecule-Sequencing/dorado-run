@@ -86,10 +86,17 @@ def run(args):
 			sys.exit(f"[dl-dorado] Error: Could not parse GitHub API response: {e}")
 
 	tar_name = f"dorado-{version}-{drd_os}-{drd_arch}.tar.gz"
+	url = f"{DRD_DL_URL_PREFIX}{tar_name}"
+
+	if getattr(args, 'dry_run', False):
+		print(f"[dl-dorado] [DRY-RUN] Would download Dorado {version} ({drd_os}/{drd_arch})")
+		print(f"[dl-dorado] [DRY-RUN] URL: {url}")
+		print(f"[dl-dorado] [DRY-RUN] Extract to: {os.path.abspath(dest)}")
+		return
+
 	tar_path = os.path.join(dest, tar_name)
 
 	print(f"[dl-dorado] Downloading Dorado {version} ({drd_os}/{drd_arch}) → {os.path.abspath(dest)}")
-	url = f"{DRD_DL_URL_PREFIX}{tar_name}"
 	vprint(f"[dl-dorado] URL: {url}")
 
 	try:

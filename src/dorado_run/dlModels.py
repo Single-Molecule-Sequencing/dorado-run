@@ -69,12 +69,15 @@ def _get_list_yaml(dorado_exe: str) -> list:
 	return data.get("modification models", [])
 
 
-def _candidates_for_mod(list_data: list, simplex_ver: str, mod_type: str) -> list:
+def _candidates_for_mod(list_data: list, simplex_ver: str, mod_type: str,
+						   simplex_tier: str = "") -> list:
 	"""
-	Return mod model name strings from list_data that match simplex_ver and mod_type.
+	Return mod model name strings from list_data that match simplex_ver, mod_type,
+	and simplex_tier.
 
-	Matching uses exact token boundaries: '@v{simplex_ver}_' for the simplex version
-	and '_{mod_type}@v' for the mod type.  Version strings follow X.Y.Z format.
+	Matching uses exact token boundaries: '_{tier}@v' for the simplex tier,
+	'@v{simplex_ver}_' for the simplex version, and '_{mod_type}@v' for the mod
+	type.  Version strings follow X.Y.Z format.
 	"""
 	candidates = []
 	for name in list_data:
@@ -89,6 +92,9 @@ def _candidates_for_mod(list_data: list, simplex_ver: str, mod_type: str) -> lis
 			continue
 		# simplex version token boundary: @v<ver>_
 		if simplex_ver and f"@v{simplex_ver}_" not in name:
+			continue
+		# simplex tier token boundary: _<tier>@v
+		if simplex_tier and f"_{simplex_tier}@v" not in name:
 			continue
 		candidates.append(name)
 	return candidates
@@ -174,10 +180,12 @@ def run(args):
 
 		for mod_type in mod_types:
 			print(f"[dl-models] Resolving mod model for: {mod_type}")
-			candidates = _candidates_for_mod(list_data, simplex_ver, mod_type)
+			candidates = _candidates_for_mod(list_data, simplex_ver, mod_type,
+											   simplex_tier)
 			if not candidates:
 				print(f"  [WARNING] No candidates found for {mod_type} "
-				      f"(simplex ver {simplex_ver}). Skipping.", file=sys.stderr)
+				      f"(simplex ver {simplex_ver}, tier {simplex_tier}). "
+				      f"Skipping.", file=sys.stderr)
 				continue
 
 			pinned = mods_ver_override.get(mod_type) if isinstance(mods_ver_override, dict) else None

@@ -25,13 +25,37 @@ def _run_pipeline(args):
 	dest   = Path(args.dest)
 	config = args.config
 
+	# Read override / source_dir from the config template so ln-pod5 can use them
+	template_cfg = {}
+	try:
+		with open(args.template, "r", encoding="utf-8") as fh:
+			template_cfg = yaml.safe_load(fh) or {}
+	except Exception:
+		pass
+
+	override_pod5 = template_cfg.get("override_pod5_dir")
+	override_name = template_cfg.get("override_experiment_name")
+
+	# Resolve source: CLI --source > config source_dir
+	source = args.source
+	if source is None:
+		source = template_cfg.get("source_dir")
+		if source is not None:
+			source = Path(source)
+
+	# source is only required when not using the override path
+	if not (override_pod5 and override_name) and source is None:
+		sys.exit("[run] Error: --source is required (or set source_dir in config template)")
+
 	# Step 1: ln-pod5
 	print("\n[run] Step 1/6 — ln-pod5")
 	lnPod5.run(argparse.Namespace(
-		source=Path(args.source),
+		source=source,
 		dest=dest,
 		pod5_name=args.pod5_name,
 		clean=False,
+		override_pod5_dir=override_pod5,
+		override_experiment_name=override_name,
 	))
 
 	# Step 2: cfg-init
@@ -96,12 +120,16 @@ def main():
 		"ln-pod5",
 		help="Symlink pod5 dirs from a raw experiment tree into Input/",
 	)
-	parser_ln.add_argument("-s", "--source", required=True, type=Path,
+	parser_ln.add_argument("-s", "--source", type=Path, default=None,
 		help="Root path containing raw experiment folders")
 	parser_ln.add_argument("-d", "--dest", type=Path, default=Path("./Input"),
 		help="Destination path where symlinks are created [%(default)s]")
 	parser_ln.add_argument("-p", "--pod5-name", default="pod5_pass",
 		help="Pod5 directory name to search for recursively [%(default)s]")
+	parser_ln.add_argument("--override-pod5-dir", type=Path, default=None,
+		help="Single pod5 directory to link (requires --override-experiment-name)")
+	parser_ln.add_argument("--override-experiment-name", type=str, default=None,
+		help="Custom experiment name for the override link")
 	parser_ln.add_argument("--clean", action="store_true",
 		help="Remove all symlinks in --dest and exit")
 
@@ -134,6 +162,8 @@ def main():
 		help="Directory to extract Dorado into [%(default)s]")
 	parser_drd.add_argument("-V", "--verbose", action="store_true",
 		help="Enable verbose output")
+	parser_drd.add_argument("--dry-run", action="store_true",
+		help="Print what would be downloaded without running Dorado")
 
 	# --- dl-models ---
 	parser_dlm = subparsers.add_parser(
@@ -176,8 +206,8 @@ def main():
 		"run",
 		help="Full pipeline: ln-pod5 → cfg-init → dl-dorado → dl-models → gen-cmd → to-sbatch",
 	)
-	parser_run.add_argument("-s", "--source", required=True, type=Path,
-		help="Raw experiment root dir; passed to ln-pod5")
+	parser_run.add_argument("-s", "--source", type=Path, default=None,
+		help="Raw experiment root dir; passed to ln-pod5 (overrides config source_dir)")
 	parser_run.add_argument("-d", "--dest", type=Path, default=Path("./Input"),
 		help="Symlink destination; also used as cfg-init --input-dir [%(default)s]")
 	parser_run.add_argument("-t", "--template", default="./cfg/config_temp.yml",
