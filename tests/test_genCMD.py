@@ -96,7 +96,10 @@ class TestBuildCommands:
     def test_mods_models_appended(self, tmp_path):
         cfg = _cfg(tmp_path, mods_flag=1, mods_model_dirs=["mod_a", "mod_b"])
         cmds = _build_commands(cfg)
-        assert cmds[0].count("--modified-bases-models") == 2
+        assert cmds[0].count("--modified-bases-models") == 1
+        # Both model paths joined by comma
+        assert "mod_a" in cmds[0] and "mod_b" in cmds[0]
+        assert ",".join(sorted(["mod_a", "mod_b"])) in cmds[0] or "," in cmds[0]
 
     def test_bam_output_uses_redirect(self, tmp_path):
         cfg = _cfg(tmp_path)

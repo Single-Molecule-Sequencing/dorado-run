@@ -100,8 +100,8 @@ def _build_commands(cfg: dict) -> list:
 			if kit_name:
 				parts += ["--kit-name", kit_name]
 
-			for mmod in mods_model_dirs:
-				parts += ["--modified-bases-models", mmod]
+			if mods_model_dirs:
+				parts += ["--modified-bases-models", ",".join(mods_model_dirs)]
 
 			parts += [">", output_bam]
 			commands.append(" ".join(parts))
