@@ -55,23 +55,23 @@ dorado-run run -s /path/to/raw/experiments/with/pod5/dirs
 
 This chains all steps in order: `ln-pod5` → `cfg-init` → `dl-dorado` → `dl-models` → `gen-cmd` → `to-sbatch`.
 
-| Flag              | Default                 | Description                                              |
-| ----------------- | ----------------------- | -------------------------------------------------------- |
-| `-s, --source`    | *(required)*            | Raw experiment root dir; passed to `ln-pod5`             |
-| `-d, --dest`      | `./Input`               | Symlink destination; also used as `cfg-init --input-dir` |
-| `-t, --template`  | `./cfg/config_temp.yml` | Config template; passed to `cfg-init`                    |
-| `-c, --config`    | `./config.yml`          | Output config path; passed to all downstream steps       |
-| `-p, --pod5-name` | `pod5_pass`             | Pod5 subdirectory name to search for recursively         |
-| `--dry-run`       | `False`                 | Preview all steps without network or disk operations     |
+| Flag              | Default                 | Description                                                                  |
+| ----------------- | ----------------------- | ---------------------------------------------------------------------------- |
+| `-s, --source`    | `null`                  | Raw experiment root dir; passed to `ln-pod5` (overrides config `source_dir`) |
+| `-d, --dest`      | `./Input`               | Symlink destination; also used as `cfg-init --input-dir`                     |
+| `-t, --template`  | `./cfg/config_temp.yml` | Config template; passed to `cfg-init`                                        |
+| `-c, --config`    | `./config.yml`          | Output config path; passed to all downstream steps                           |
+| `-p, --pod5-name` | `pod5_pass`             | Pod5 subdirectory name to search for recursively                             |
+| `--dry-run`       | `False`                 | Preview all steps without network or disk operations                         |
 
 ### Individual subcommands
 
 Each step can be run independently at any time:
 
 ```bash
-dorado-run ln-pod5    -s <raw_dir> [-d <dest>] [-p <pod5_name>]
+dorado-run ln-pod5    -s <raw_dir> [-d <dest>] [-p <pod5_name>] [--override-pod5-dir <dir> --override-experiment-name <name>]
 dorado-run cfg-init   [-t <template>] [-i <input_dir>] [-o <output>]
-dorado-run dl-dorado  [-v <version>] [-O <os>] [-a <arch>] [-d <dest>]
+dorado-run dl-dorado  [-v <version>] [-O <os>] [-a <arch>] [-d <dest>] [--dry-run]
 dorado-run dl-models  [-c <config>] [--dry-run]
 dorado-run gen-cmd    [-c <config>] [-o <cmd_txt>] [--dry-run]
 dorado-run to-sbatch  [-c <config>] [-i <cmd_txt>] [-o <outdir>] [--dry-run]
@@ -83,12 +83,14 @@ dorado-run to-sbatch  [-c <config>] [-i <cmd_txt>] [-o <outdir>] [--dry-run]
 
 Recursively finds pod5 directories under `--source` and symlinks them into `--dest`. Handles both pre-demux (no barcode subdirs) and post-demux (barcode subdirs present) layouts.
 
-| Flag              | Default      | Description                                   |
-| ----------------- | ------------ | --------------------------------------------- |
-| `-s, --source`    | *(required)* | Root path containing raw experiment folders   |
-| `-d, --dest`      | `./Input`    | Destination path where symlinks are created   |
-| `-p, --pod5-name` | `pod5_pass`  | Pod5 directory name to search for recursively |
-| `--clean`         | `False`      | Remove all symlinks in `--dest` and exit      |
+| Flag                         | Default     | Description                                                           |
+| ---------------------------- | ----------- | --------------------------------------------------------------------- |
+| `-s, --source`               | `null`      | Root path containing raw experiment folders                           |
+| `-d, --dest`                 | `./Input`   | Destination path where symlinks are created                           |
+| `-p, --pod5-name`            | `pod5_pass` | Pod5 directory name to search for recursively                         |
+| `--override-pod5-dir`        | `null`      | Single pod5 directory to link (requires `--override-experiment-name`) |
+| `--override-experiment-name` | `null`      | Custom experiment name for the override link                          |
+| `--clean`                    | `False`     | Remove all symlinks in `--dest` and exit                              |
 
 ```bash
 dorado-run ln-pod5 -s /data/runs/2026-03-01 -d ./Input
@@ -118,14 +120,15 @@ dorado-run cfg-init -t cfg/config_temp.yml -i ./Input -o config.yml
 
 Downloads the specified Dorado release tarball from the ONT CDN and extracts it. Version, OS, and architecture are read from `config.yml` by default; CLI flags override.
 
-| Flag              | Default               | Description                                       |
-| ----------------- | --------------------- | ------------------------------------------------- |
-| `-c, --config`    | `./config.yml`        | Config file to read `drd_ver`/`drd_os`/`drd_arch` |
-| `-v, --version`   | *(config or `l`)*     | Dorado version: `l` for latest, or `X.Y.Z`        |
-| `-O, --target-os` | *(config or `linux`)* | Target OS: `linux` or `macos`                     |
-| `-a, --arch`      | *(config or `x64`)*   | Architecture: `x64` or `arm64`                    |
-| `-d, --dest`      | `.`                   | Directory to extract Dorado into                  |
-| `-V, --verbose`   | `False`               | Enable verbose output                             |
+| Flag              | Default               | Description                                        |
+| ----------------- | --------------------- | -------------------------------------------------- |
+| `-c, --config`    | `./config.yml`        | Config file to read `drd_ver`/`drd_os`/`drd_arch`  |
+| `-v, --version`   | *(config or `l`)*     | Dorado version: `l` for latest, or `X.Y.Z`         |
+| `-O, --target-os` | *(config or `linux`)* | Target OS: `linux` or `macos`                      |
+| `-a, --arch`      | *(config or `x64`)*   | Architecture: `x64` or `arm64`                     |
+| `-d, --dest`      | `.`                   | Directory to extract Dorado into                   |
+| `-V, --verbose`   | `False`               | Enable verbose output                              |
+| `--dry-run`       | `False`               | Print what would be downloaded without downloading |
 
 ```bash
 dorado-run dl-dorado -v 0.9.1 -O linux -a x64 -d .
@@ -135,7 +138,7 @@ dorado-run dl-dorado -v 0.9.1 -O linux -a x64 -d .
 
 #### `dl-models`
 
-Downloads the simplex basecalling model and any modification models specified by `mods_flag` in `config.yml`. Uses `dorado download --list-yaml` to discover available model versions. Skips models that are already present on disk.
+Downloads the simplex basecalling model and any modification models specified by `mods_flag` in `config.yml`. Uses `dorado download --list-yaml` to discover available model versions and filters candidates by `simplex_model_tier` to ensure tier consistency. Skips models that are already present on disk.
 
 | Flag           | Default        | Description                                    |
 | -------------- | -------------- | ---------------------------------------------- |
@@ -192,24 +195,27 @@ Copy and edit before running. `cfg-init` reads this file and writes the resolved
 
 ### Basecalling settings
 
-| Key                  | Default                                               | Description                                                                |
-| -------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------- |
-| `drd_ver`            | `"1.4.0"`                                             | Dorado release version                                                     |
-| `drd_os`             | `"linux"`                                             | Target OS for the binary (`linux` / `macos`)                               |
-| `drd_arch`           | `"x64"`                                               | CPU architecture (`x64` / `arm64`)                                         |
-| `drd_exe`            | `"./dorado-{drd_ver}-{drd_os}-{drd_arch}/bin/dorado"` | Resolved path to Dorado binary                                             |
-| `simplex_model_ver`  | `"5.0.0"`                                             | Simplex model version                                                      |
-| `simplex_model_tier` | `"sup"`                                               | Model tier: `sup`, `hac`, or `fast`                                        |
-| `dna_model_prefix`   | `"dna_r10.4.1_e8.2_400bps_"`                          | Model name prefix                                                          |
-| `mods_flag`          | `0`                                                   | Modifications bit-flag (see table below)                                   |
-| `mods_ver`           | `null`                                                | Per-mod-type version pin (`null` = latest)                                 |
-| `kit_name`           | `null`                                                | Barcode kit for demux (e.g. `SQK-NBD114-96`); `null` disables `--kit-name` |
-| `trim`               | `"yes"`                                               | Trim adapter: `yes`, `no`, or `both`                                       |
-| `gpu`                | `"auto"`                                              | GPU selector passed to `-x`                                                |
-| `models_dir`         | `"./Models"`                                          | Root directory for downloaded models                                       |
-| `simplex_model_dir`  | `"{models_dir}/Simplex"`                              | Destination for simplex model                                              |
-| `mods_model_dir`     | `"{models_dir}/Mods"`                                 | Destination for modification models                                        |
-| `output_directory`   | `"./Output"`                                          | Directory for output BAM files                                             |
+| Key                        | Default                                               | Description                                                                |
+| -------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------- |
+| `drd_ver`                  | `"1.4.0"`                                             | Dorado release version                                                     |
+| `drd_os`                   | `"linux"`                                             | Target OS for the binary (`linux` / `macos`)                               |
+| `drd_arch`                 | `"x64"`                                               | CPU architecture (`x64` / `arm64`)                                         |
+| `drd_exe`                  | `"./dorado-{drd_ver}-{drd_os}-{drd_arch}/bin/dorado"` | Resolved path to Dorado binary                                             |
+| `simplex_model_ver`        | `"5.0.0"`                                             | Simplex model version                                                      |
+| `simplex_model_tier`       | `"sup"`                                               | Model tier: `sup`, `hac`, or `fast`                                        |
+| `dna_model_prefix`         | `"dna_r10.4.1_e8.2_400bps_"`                          | Model name prefix                                                          |
+| `mods_flag`                | `0`                                                   | Modifications bit-flag (see table below)                                   |
+| `mods_ver`                 | `null`                                                | Per-mod-type version pin (`null` = latest)                                 |
+| `kit_name`                 | `null`                                                | Barcode kit for demux (e.g. `SQK-NBD114-96`); `null` disables `--kit-name` |
+| `trim`                     | `"yes"`                                               | Trim adapter: `yes`, `no`, or `both`                                       |
+| `gpu`                      | `"auto"`                                              | GPU selector passed to `-x`                                                |
+| `models_dir`               | `"./Models"`                                          | Root directory for downloaded models                                       |
+| `simplex_model_dir`        | `"{models_dir}/Simplex"`                              | Destination for simplex model                                              |
+| `mods_model_dir`           | `"{models_dir}/Mods"`                                 | Destination for modification models                                        |
+| `output_directory`         | `"./Output"`                                          | Directory for output BAM files                                             |
+| `source_dir`               | `null`                                                | Source directory for `ln-pod5` (alternative to CLI `--source`)             |
+| `override_pod5_dir`        | `null`                                                | Single pod5 dir to link (requires `override_experiment_name`)              |
+| `override_experiment_name` | `null`                                                | Custom experiment name for override link                                   |
 
 ### `mods_flag` values
 
